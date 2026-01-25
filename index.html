@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Delta Helper - Avisos Gerais</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f7f7f7;
+      margin: 0;
+      padding: 0;
+    }
+    header {
+      background: #4a90e2;
+      color: white;
+      padding: 1rem;
+      text-align: center;
+      font-size: 1.5rem;
+    }
+    .avisos-container {
+      max-width: 800px;
+      margin: 2rem auto;
+      padding: 0 1rem;
+    }
+    .aviso {
+      background: white;
+      padding: 1rem;
+      margin-bottom: 1rem;
+      border-radius: 8px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    }
+    .aviso h2 {
+      margin: 0 0 0.5rem 0;
+      font-size: 1.2rem;
+      color: #333;
+    }
+    .aviso .data {
+      font-size: 0.85rem;
+      color: #777;
+      margin-bottom: 0.5rem;
+    }
+    .aviso .texto {
+      margin-bottom: 0.5rem;
+    }
+    .aviso a {
+      display: inline-block;
+      margin-right: 0.5rem;
+      margin-top: 0.2rem;
+      text-decoration: none;
+      color: #4a90e2;
+      font-size: 0.9rem;
+    }
+    .aviso a.pdf {
+      color: #d35400;
+    }
+    img {
+      max-width: 100%;
+      border-radius: 4px;
+      margin-top: 0.5rem;
+      margin-bottom: 0.5rem;
+    }
+  </style>
+</head>
+<body>
+  <header>Delta Helper - Avisos</header>
+  <div class="avisos-container" id="avisos-container">
+    <p>Carregando avisos...</p>
+  </div>
+
+  <script>
+    async function carregarAvisos() {
+      const container = document.getElementById('avisos-container');
+      container.innerHTML = "<p>Carregando avisos...</p>";
+
+      try {
+        const res = await fetch('/');
+        const data = await res.json();
+        const avisos = data.avisos;
+
+        if (!avisos || avisos.length === 0) {
+          container.innerHTML = "<p>Nenhum aviso disponível.</p>";
+          return;
+        }
+
+        container.innerHTML = '';
+        avisos.forEach(aviso => {
+          const div = document.createElement('div');
+          div.classList.add('aviso');
+
+          // título
+          const h2 = document.createElement('h2');
+          h2.textContent = aviso.titulo;
+          div.appendChild(h2);
+
+          // data
+          const dataEl = document.createElement('div');
+          dataEl.classList.add('data');
+          dataEl.textContent = new Date(aviso.data).toLocaleString('pt-BR');
+          div.appendChild(dataEl);
+
+          // texto
+          const textoEl = document.createElement('div');
+          textoEl.classList.add('texto');
+          textoEl.innerHTML = aviso.texto;
+          div.appendChild(textoEl);
+
+          // arquivos
+          if (aviso.arquivos && aviso.arquivos.length > 0) {
+            aviso.arquivos.forEach(file => {
+              const ext = file.split('.').pop().toLowerCase();
+              if (['png','jpg','jpeg','gif','webp'].includes(ext)) {
+                const img = document.createElement('img');
+                img.src = `https://service.deltasge.net/0169/2026/mensagens/${file}`;
+                div.appendChild(img);
+              } else if (ext === 'pdf') {
+                const a = document.createElement('a');
+                a.href = `https://service.deltasge.net/0169/2026/mensagens/${file}`;
+                a.textContent = "Abrir PDF: " + file;
+                a.target = "_blank";
+                a.classList.add('pdf');
+                div.appendChild(a);
+              }
+            });
+          }
+
+          // links
+          if (aviso.links && aviso.links.length > 0) {
+            aviso.links.forEach(link => {
+              const a = document.createElement('a');
+              a.href = link;
+              a.textContent = link;
+              a.target = "_blank";
+              div.appendChild(a);
+            });
+          }
+
+          container.appendChild(div);
+        });
+
+      } catch (err) {
+        container.innerHTML = `<p>Erro ao carregar avisos: ${err}</p>`;
+      }
+    }
+
+    carregarAvisos();
+  </script>
+</body>
+</html>
