@@ -1,166 +1,106 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Delta Helper - Avisos</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: #f7f7f7;
-      margin: 0;
-      padding: 0;
-    }
-    header {
-      background: #4a90e2;
-      color: white;
-      padding: 1rem;
-      text-align: center;
-      font-size: 1.5rem;
-    }
-    .avisos-container {
-      max-width: 800px;
-      margin: 2rem auto;
-      padding: 0 1rem;
-    }
-    .aviso {
-      background: white;
-      padding: 1rem;
-      margin-bottom: 1rem;
-      border-radius: 8px;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-    }
-    .aviso h2 {
-      margin: 0 0 0.5rem 0;
-      font-size: 1.2rem;
-      color: #333;
-    }
-    .aviso .data {
-      font-size: 0.85rem;
-      color: #777;
-      margin-bottom: 0.5rem;
-    }
-    .aviso .texto {
-      margin-bottom: 0.5rem;
-    }
-    .aviso a {
-      display: inline-block;
-      margin-right: 0.5rem;
-      margin-top: 0.2rem;
-      text-decoration: none;
-      color: #4a90e2;
-      font-size: 0.9rem;
-    }
-    .aviso a.pdf {
-      color: #d35400;
-    }
-    img {
-      max-width: 100%;
-      border-radius: 4px;
-      margin-top: 0.5rem;
-      margin-bottom: 0.5rem;
-    }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Avisos Gerais</title>
+<style>
+  body { font-family: Arial, sans-serif; background: #f5f5f5; margin: 0; padding: 0; }
+  header { background: #0073e6; color: white; padding: 1rem; text-align: center; }
+  main { padding: 1rem; max-width: 800px; margin: auto; }
+  article { background: white; padding: 1rem; margin-bottom: 1rem; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+  h2 { margin-top: 0; }
+  .data { color: #555; font-size: 0.9rem; margin-bottom: 0.5rem; }
+  img { max-width: 100%; height: auto; margin-top: 0.5rem; border-radius: 5px; }
+  a { color: #0073e6; word-break: break-word; display: block; margin-top: 0.5rem; }
+</style>
 </head>
 <body>
-  <header>Delta Helper - Avisos</header>
-  <div class="avisos-container" id="avisos-container">
-    <p>Carregando avisos...</p>
-  </div>
 
-  <script>
-    async function carregarAvisos() {
-      const container = document.getElementById('avisos-container');
-      container.innerHTML = "<p>Carregando avisos...</p>";
+<header>
+  <h1>Avisos Gerais</h1>
+</header>
 
-      try {
-        // Aqui apontamos pro seu Cloudflare Worker
-        const res = await fetch('https://delta-helper-avisosgerais-cloudfare.katachionsha.workers.dev/');
-        const data = await res.json();
-        const avisos = data.avisos;
+<main id="avisos-container">
+  <p>Carregando avisos...</p>
+</main>
 
-        addEventListener('fetch', event => {
-          event.respondWith(handleRequest(event.request))
-        })
+<script>
+const workerUrl = 'https://delta-helper-avisosgerais-cloudfare.katachionsha.workers.dev/';
 
-        async function handleRequest(request) {
-          // Simulando o fetch do backend real do Delta
-          const url = 'https://delta-helper-avisosgerais-cloudfare.katachionsha.workers.dev/api'; // se for outro endpoint, coloque aqui
-          const res = await fetch(url);
-          const data = await res.json();
+async function carregarAvisos() {
+  const container = document.getElementById('avisos-container');
+  container.innerHTML = '<p>Carregando avisos...</p>';
 
-          return new Response(JSON.stringify(data), {
-            headers: {
-              'Content-Type': 'application/json',
-              'Access-Control-Allow-Origin': '*',   // 🔑 libera CORS
-              'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-              'Access-Control-Allow-Headers': 'Content-Type, Authorization'
-            }
-          });
-        }
+  try {
+    const res = await fetch(workerUrl);
+    if (!res.ok) throw new Error('Falha ao buscar avisos');
+    const data = await res.json();
 
-        
-        if (!avisos || avisos.length === 0) {
-          container.innerHTML = "<p>Nenhum aviso disponível.</p>";
-          return;
-        }
+    container.innerHTML = '';
+    data.avisos.forEach(aviso => {
+      const article = document.createElement('article');
 
-        container.innerHTML = '';
-        avisos.forEach(aviso => {
-          const div = document.createElement('div');
-          div.classList.add('aviso');
+      // Título
+      const titulo = document.createElement('h2');
+      titulo.textContent = aviso.titulo;
+      article.appendChild(titulo);
 
-          const h2 = document.createElement('h2');
-          h2.textContent = aviso.titulo;
-          div.appendChild(h2);
+      // Data
+      const dataElem = document.createElement('div');
+      dataElem.className = 'data';
+      const dataObj = new Date(aviso.data);
+      dataElem.textContent = dataObj.toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' });
+      article.appendChild(dataElem);
 
-          const dataEl = document.createElement('div');
-          dataEl.classList.add('data');
-          dataEl.textContent = new Date(aviso.data).toLocaleString('pt-BR');
-          div.appendChild(dataEl);
+      // Texto
+      const texto = document.createElement('div');
+      texto.innerHTML = aviso.texto;
+      article.appendChild(texto);
 
-          const textoEl = document.createElement('div');
-          textoEl.classList.add('texto');
-          textoEl.innerHTML = aviso.texto;
-          div.appendChild(textoEl);
-
-          if (aviso.arquivos && aviso.arquivos.length > 0) {
-            aviso.arquivos.forEach(file => {
-              const ext = file.split('.').pop().toLowerCase();
-              if (['png','jpg','jpeg','gif','webp'].includes(ext)) {
-                const img = document.createElement('img');
-                img.src = `https://service.deltasge.net/0169/2026/mensagens/${file}`;
-                div.appendChild(img);
-              } else if (ext === 'pdf') {
-                const a = document.createElement('a');
-                a.href = `https://service.deltasge.net/0169/2026/mensagens/${file}`;
-                a.textContent = "Abrir PDF: " + file;
-                a.target = "_blank";
-                a.classList.add('pdf');
-                div.appendChild(a);
-              }
-            });
+      // Arquivos
+      if (aviso.arquivos && aviso.arquivos.length > 0) {
+        aviso.arquivos.forEach(arq => {
+          const ext = arq.split('.').pop().toLowerCase();
+          const fileUrl = `https://service.deltasge.net/storage/${arq}`;
+          if (ext === 'pdf') {
+            const link = document.createElement('a');
+            link.href = fileUrl;
+            link.target = '_blank';
+            link.textContent = 'Abrir PDF: ' + arq;
+            article.appendChild(link);
+          } else {
+            const img = document.createElement('img');
+            img.src = fileUrl;
+            img.alt = arq;
+            article.appendChild(img);
           }
-
-          if (aviso.links && aviso.links.length > 0) {
-            aviso.links.forEach(link => {
-              const a = document.createElement('a');
-              a.href = link;
-              a.textContent = link;
-              a.target = "_blank";
-              div.appendChild(a);
-            });
-          }
-
-          container.appendChild(div);
         });
-
-      } catch (err) {
-        container.innerHTML = `<p>Erro ao carregar avisos: ${err}</p>`;
       }
-    }
 
-    carregarAvisos();
-  </script>
+      // Links
+      if (aviso.links && aviso.links.length > 0) {
+        aviso.links.forEach(l => {
+          const a = document.createElement('a');
+          a.href = l;
+          a.target = '_blank';
+          a.textContent = l;
+          article.appendChild(a);
+        });
+      }
+
+      container.appendChild(article);
+    });
+
+  } catch (err) {
+    console.error(err);
+    container.innerHTML = `<p>Erro ao carregar avisos: ${err.message}</p>`;
+  }
+}
+
+// Carrega ao abrir a página
+carregarAvisos();
+</script>
+
 </body>
 </html>
