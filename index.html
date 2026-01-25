@@ -79,6 +79,27 @@
         const data = await res.json();
         const avisos = data.avisos;
 
+        addEventListener('fetch', event => {
+          event.respondWith(handleRequest(event.request))
+        })
+
+        async function handleRequest(request) {
+          // Simulando o fetch do backend real do Delta
+          const url = 'https://delta-helper-avisosgerais-cloudfare.katachionsha.workers.dev/api'; // se for outro endpoint, coloque aqui
+          const res = await fetch(url);
+          const data = await res.json();
+
+          return new Response(JSON.stringify(data), {
+            headers: {
+              'Content-Type': 'application/json',
+              'Access-Control-Allow-Origin': '*',   // 🔑 libera CORS
+              'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+              'Access-Control-Allow-Headers': 'Content-Type, Authorization'
+            }
+          });
+        }
+
+        
         if (!avisos || avisos.length === 0) {
           container.innerHTML = "<p>Nenhum aviso disponível.</p>";
           return;
