@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Delta Helper - Avisos Gerais</title>
+  <title>Delta Helper - Avisos</title>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -74,7 +74,8 @@
       container.innerHTML = "<p>Carregando avisos...</p>";
 
       try {
-        const res = await fetch('/');
+        // Aqui apontamos pro seu Cloudflare Worker
+        const res = await fetch('https://delta-helper-avisosgerais-cloudfare.katachionsha.workers.dev/');
         const data = await res.json();
         const avisos = data.avisos;
 
@@ -88,24 +89,20 @@
           const div = document.createElement('div');
           div.classList.add('aviso');
 
-          // título
           const h2 = document.createElement('h2');
           h2.textContent = aviso.titulo;
           div.appendChild(h2);
 
-          // data
           const dataEl = document.createElement('div');
           dataEl.classList.add('data');
           dataEl.textContent = new Date(aviso.data).toLocaleString('pt-BR');
           div.appendChild(dataEl);
 
-          // texto
           const textoEl = document.createElement('div');
           textoEl.classList.add('texto');
           textoEl.innerHTML = aviso.texto;
           div.appendChild(textoEl);
 
-          // arquivos
           if (aviso.arquivos && aviso.arquivos.length > 0) {
             aviso.arquivos.forEach(file => {
               const ext = file.split('.').pop().toLowerCase();
@@ -124,7 +121,6 @@
             });
           }
 
-          // links
           if (aviso.links && aviso.links.length > 0) {
             aviso.links.forEach(link => {
               const a = document.createElement('a');
